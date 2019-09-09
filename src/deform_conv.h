@@ -12,29 +12,33 @@ deform_conv_forward(const at::Tensor &input,
                const at::Tensor &weight,
                const at::Tensor &bias,
                const at::Tensor &offset,
+               const int kernel_t,
                const int kernel_h,
                const int kernel_w,
+               const int stride_t,
                const int stride_h,
                const int stride_w,
+               const int pad_t,
                const int pad_h,
                const int pad_w,
+               const int dilation_t,
                const int dilation_h,
                const int dilation_w,
                const int group,
                const int deformable_group,
-               const int im2col_step)
+               const int vol2col_step)
 {
     if (input.type().is_cuda())
     {
 #ifdef WITH_CUDA
         return deform_conv_cuda_forward(input, weight, bias, offset,
-                                   kernel_h, kernel_w,
-                                   stride_h, stride_w,
-                                   pad_h, pad_w,
-                                   dilation_h, dilation_w,
+                                   kernel_t, kernel_h, kernel_w,
+                                   stride_t, stride_h, stride_w,
+                                   pad_t, pad_h, pad_w,
+                                   dilation_t, dilation_h, dilation_w,
                                    group,
                                    deformable_group, 
-                                   im2col_step);
+                                   vol2col_step);
 #else
         AT_ERROR("Not compiled with GPU support");
 #endif
@@ -48,17 +52,21 @@ deform_conv_backward(const at::Tensor &input,
                 const at::Tensor &bias,
                 const at::Tensor &offset,
                 const at::Tensor &grad_output,
-                const int kernel_h, 
+                const int kernel_t,
+                const int kernel_h,
                 const int kernel_w,
-                const int stride_h, 
+                const int stride_t,
+                const int stride_h,
                 const int stride_w,
-                const int pad_h, 
+                const int pad_t,
+                const int pad_h,
                 const int pad_w,
-                const int dilation_h, 
+                const int dilation_t,
+                const int dilation_h,
                 const int dilation_w,
                 const int group,
                 const int deformable_group,
-                const int im2col_step)
+                const int vol2col_step)
 {
     if (input.type().is_cuda())
     {
@@ -68,13 +76,13 @@ deform_conv_backward(const at::Tensor &input,
                                     bias,
                                     offset,
                                     grad_output,
-                                    kernel_h, kernel_w,
-                                    stride_h, stride_w,
-                                    pad_h, pad_w,
-                                    dilation_h, dilation_w,
+                                    kernel_t, kernel_h, kernel_w,
+                                    stride_t, stride_h, stride_w,
+                                    pad_t, pad_h, pad_w,
+                                    dilation_t, dilation_h, dilation_w,
                                     group,
-                                    deformable_group,
-                                    im2col_step);
+                                    deformable_group, 
+                                    vol2col_step);
 #else
         AT_ERROR("Not compiled with GPU support");
 #endif

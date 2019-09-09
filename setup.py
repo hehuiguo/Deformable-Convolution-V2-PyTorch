@@ -44,7 +44,7 @@ def get_extensions():
     include_dirs = [extensions_dir]
     ext_modules = [
         extension(
-            "DCN",
+            "DCN3D",
             sources,
             include_dirs=include_dirs,
             define_macros=define_macros,
@@ -54,11 +54,11 @@ def get_extensions():
     return ext_modules
 
 setup(
-    name="DCN",
+    name="DCN3D",
     version="1.0",
     author="xvjiarui",
     url="https://github.com/charlesshang/DCNv2",
-    description="deformable convolutional networks",
+    description="3d deformable convolutional networks",
     packages=find_packages(exclude=("configs", "tests",)),
     # install_requires=requirements,
     ext_modules=get_extensions(),

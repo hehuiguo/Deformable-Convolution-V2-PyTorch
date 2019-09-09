@@ -7,14 +7,14 @@ import torch
 import math
 from torch import nn
 from torch.nn import init
-from torch.nn.modules.utils import _pair
+from torch.nn.modules.utils import _triple
 
 from functions.deform_conv_func import DeformConvFunction
 
 class DeformConv(nn.Module):
 
     def __init__(self, in_channels, out_channels,
-                 kernel_size, stride, padding, dilation=1, groups=1, deformable_groups=1, im2col_step=64, bias=True):
+                 kernel_size, stride, padding, dilation=1, groups=1, deformable_groups=1, vol2col_step=64, bias=True):
         super(DeformConv, self).__init__()
 
         if in_channels % groups != 0:
@@ -24,13 +24,13 @@ class DeformConv(nn.Module):
 
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.kernel_size = _pair(kernel_size)
-        self.stride = _pair(stride)
-        self.padding = _pair(padding)
-        self.dilation = _pair(dilation)
+        self.kernel_size = _triple(kernel_size)
+        self.stride = _triple(stride)
+        self.padding = _triple(padding)
+        self.dilation = _triple(dilation)
         self.groups = groups
         self.deformable_groups = deformable_groups
-        self.im2col_step = im2col_step
+        self.vol2col_step = vol2col_step
         self.use_bias = bias
         
         self.weight = nn.Parameter(torch.Tensor(
@@ -59,7 +59,7 @@ class DeformConv(nn.Module):
                                                    self.dilation,
                                                    self.groups,
                                                    self.deformable_groups,
-                                                   self.im2col_step)
+                                                   self.vol2col_step)
 
 _DeformConv = DeformConvFunction.apply
 
@@ -67,9 +67,9 @@ class DeformConvPack(DeformConv):
 
     def __init__(self, in_channels, out_channels,
                  kernel_size, stride, padding,
-                 dilation=1, groups=1, deformable_groups=1, im2col_step=64, bias=True, lr_mult=0.1):
+                 dilation=1, groups=1, deformable_groups=1, vol2col_step=64, bias=True, lr_mult=0.1):
         super(DeformConvPack, self).__init__(in_channels, out_channels,
-                                  kernel_size, stride, padding, dilation, groups, deformable_groups, im2col_step, bias)
+                                  kernel_size, stride, padding, dilation, groups, deformable_groups, vol2col_step, bias)
 
         out_channels = self.deformable_groups * 2 * self.kernel_size[0] * self.kernel_size[1]
         self.conv_offset = nn.Conv2d(self.in_channels,
@@ -95,5 +95,5 @@ class DeformConvPack(DeformConv):
                                           self.dilation, 
                                           self.groups,
                                           self.deformable_groups,
-                                          self.im2col_step)
+                                          self.vol2col_step)
 
