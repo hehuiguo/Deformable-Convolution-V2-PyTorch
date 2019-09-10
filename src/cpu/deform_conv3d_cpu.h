@@ -2,7 +2,7 @@
 #include <torch/extension.h>
 
 at::Tensor
-deform_conv_cuda_forward(const at::Tensor &input,
+deform_conv3d_cpu_forward(const at::Tensor &input,
                     const at::Tensor &weight,
                     const at::Tensor &bias,
                     const at::Tensor &offset,
@@ -23,17 +23,17 @@ deform_conv_cuda_forward(const at::Tensor &input,
                     const int vol2col_step);
 
 std::vector<at::Tensor>
-deform_conv_cuda_backward(const at::Tensor &input,
+deform_conv3d_cpu_backward(const at::Tensor &input,
                      const at::Tensor &weight,
                      const at::Tensor &bias,
                      const at::Tensor &offset,
                      const at::Tensor &grad_output,
                      const int kernel_t,
-                     const int kernel_h,
-                     const int kernel_w,
-                     const int stride_t,
-                     const int stride_h,
-                     const int stride_w,
+                    const int kernel_h,
+                    const int kernel_w,
+                    const int stride_t,
+                    const int stride_h,
+                    const int stride_w,
                     const int pad_t,
                     const int pad_h,
                     const int pad_w,
@@ -43,4 +43,5 @@ deform_conv_cuda_backward(const at::Tensor &input,
                     const int group,
                     const int deformable_group,
                     const int vol2col_step);
+
 

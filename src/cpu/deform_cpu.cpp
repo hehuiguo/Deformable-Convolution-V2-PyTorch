@@ -4,7 +4,7 @@
 #include <ATen/cuda/CUDAContext.h>
 
 at::Tensor
-deform_conv_cpu_forward(const at::Tensor &input,
+deform_conv3d_cpu_forward(const at::Tensor &input,
                     const at::Tensor &weight,
                     const at::Tensor &bias,
                     const at::Tensor &offset,
@@ -28,7 +28,7 @@ deform_conv_cpu_forward(const at::Tensor &input,
 }
 
 std::vector<at::Tensor>
-deform_conv_cpu_backward(const at::Tensor &input,
+deform_conv3d_cpu_backward(const at::Tensor &input,
                      const at::Tensor &weight,
                      const at::Tensor &bias,
                      const at::Tensor &offset,

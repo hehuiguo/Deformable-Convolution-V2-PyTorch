@@ -17,7 +17,7 @@
 
 
 at::Tensor
-deform_conv_cuda_forward(const at::Tensor &input,
+deform_conv3d_cuda_forward(const at::Tensor &input,
                     const at::Tensor &weight,
                     const at::Tensor &bias,
                     const at::Tensor &offset,
@@ -93,8 +93,8 @@ deform_conv_cuda_forward(const at::Tensor &input,
     auto output_n = output.view({batch/vol2col_step_, batch_n * time_out * height_out * width_out, channels_out});
     for (int n = 0; n < batch/vol2col_step_; ++n)
     {
-        auto columns = at::empty({channels * kernel_h * kernel_w, batch_n * height_out * width_out}, input.options());
-        AT_DISPATCH_FLOATING_TYPES(input.type(), "deform_conv_forward_cuda", ([&] {
+        auto columns = at::empty({channels * kernel_t * kernel_h * kernel_w, batch_n * time_out * height_out * width_out}, input.options());
+        AT_DISPATCH_FLOATING_TYPES(input.type(), "deform_conv3d_forward_cuda", ([&] {
             deformable_vol2col_cuda(at::cuda::getCurrentCUDAStream(),
                                              input.data<scalar_t>() + n * vol2col_step_ * per_input_size,
                                              offset.data<scalar_t>() + n * vol2col_step_ * per_offset_size,
@@ -105,7 +105,6 @@ deform_conv_cuda_forward(const at::Tensor &input,
                                              columns.data<scalar_t>());
 
         }));
-
         // auto columns_m = columns.t();
         // auto weight_m = weight.view({channels_out, channels_kernel * kernel_h * kernel_w}).t();
         // output = at::addmm(bias, columns_m, weight_m);
@@ -126,7 +125,7 @@ deform_conv_cuda_forward(const at::Tensor &input,
     return output;
 }
 
-std::vector<at::Tensor> deform_conv_cuda_backward(const at::Tensor &input,
+std::vector<at::Tensor> deform_conv3d_cuda_backward(const at::Tensor &input,
                                              const at::Tensor &weight,
                                              const at::Tensor &bias,
                                              const at::Tensor &offset,
@@ -231,7 +230,7 @@ std::vector<at::Tensor> deform_conv_cuda_backward(const at::Tensor &input,
             columns_g.select(0, g) = at::mm(weight_gm, grad_output_gm); //columns_g.select(0, g) = weight_gm * grad_output_gm
         }
 
-        AT_DISPATCH_FLOATING_TYPES(input.type(), "deform_conv_backward_cuda", ([&] {
+        AT_DISPATCH_FLOATING_TYPES(input.type(), "deform_conv3d_backward_cuda", ([&] {
             // gradient w.r.t. offset
             deformable_col2vol_coord_cuda(at::cuda::getCurrentCUDAStream(),
                                                    columns.data<scalar_t>(),

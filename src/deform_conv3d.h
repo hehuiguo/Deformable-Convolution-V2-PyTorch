@@ -1,14 +1,14 @@
 #pragma once
 
-#include "cpu/deform_conv_cpu.h"
+#include "cpu/deform_conv3d_cpu.h"
 
 #ifdef WITH_CUDA
-#include "cuda/deform_conv_cuda.h"
+#include "cuda/deform_conv3d_cuda.h"
 #endif
 
 
 at::Tensor
-deform_conv_forward(const at::Tensor &input,
+deform_conv3d_forward(const at::Tensor &input,
                const at::Tensor &weight,
                const at::Tensor &bias,
                const at::Tensor &offset,
@@ -31,7 +31,7 @@ deform_conv_forward(const at::Tensor &input,
     if (input.type().is_cuda())
     {
 #ifdef WITH_CUDA
-        return deform_conv_cuda_forward(input, weight, bias, offset,
+        return deform_conv3d_cuda_forward(input, weight, bias, offset,
                                    kernel_t, kernel_h, kernel_w,
                                    stride_t, stride_h, stride_w,
                                    pad_t, pad_h, pad_w,
@@ -47,7 +47,7 @@ deform_conv_forward(const at::Tensor &input,
 }
 
 std::vector<at::Tensor>
-deform_conv_backward(const at::Tensor &input,
+deform_conv3d_backward(const at::Tensor &input,
                 const at::Tensor &weight,
                 const at::Tensor &bias,
                 const at::Tensor &offset,
@@ -71,7 +71,7 @@ deform_conv_backward(const at::Tensor &input,
     if (input.type().is_cuda())
     {
 #ifdef WITH_CUDA
-        return deform_conv_cuda_backward(input,
+        return deform_conv3d_cuda_backward(input,
                                     weight,
                                     bias,
                                     offset,

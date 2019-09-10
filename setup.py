@@ -56,7 +56,7 @@ def get_extensions():
 setup(
     name="DCN3D",
     version="1.0",
-    author="xvjiarui",
+    author="hugo",
     url="https://github.com/charlesshang/DCNv2",
     description="3d deformable convolutional networks",
     packages=find_packages(exclude=("configs", "tests",)),

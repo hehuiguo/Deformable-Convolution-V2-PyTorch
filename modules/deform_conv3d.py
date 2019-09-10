@@ -9,7 +9,7 @@ from torch import nn
 from torch.nn import init
 from torch.nn.modules.utils import _triple
 
-from functions.deform_conv_func3d import DeformConvFunction3d
+from deform_conv3d_func import DeformConv3dFunction
 
 class DeformConv3d(nn.Module):
 
@@ -51,7 +51,7 @@ class DeformConv3d(nn.Module):
     def forward(self, input, offset):
         assert 3 * self.deformable_groups * self.kernel_size[0] * self.kernel_size[1] * self.kernel_size[2] == \
             offset.shape[1]
-        return DeformConvFunction3d.apply(input, offset,
+        return DeformConv3dFunction.apply(input, offset,
                                                    self.weight,
                                                    self.bias,
                                                    self.stride,
@@ -61,7 +61,7 @@ class DeformConv3d(nn.Module):
                                                    self.deformable_groups,
                                                    self.vol2col_step)
 
-_DeformConv = DeformConvFunction3d.apply
+_DeformConv = DeformConv3dFunction.apply
 
 class DeformConvPack3d(DeformConv3d):
 
@@ -87,7 +87,7 @@ class DeformConvPack3d(DeformConv3d):
 
     def forward(self, input):
         offset = self.conv_offset(input)
-        return DeformConvFunction3d.apply(input, offset, 
+        return DeformConv3dFunction.apply(input, offset, 
                                           self.weight, 
                                           self.bias, 
                                           self.stride, 

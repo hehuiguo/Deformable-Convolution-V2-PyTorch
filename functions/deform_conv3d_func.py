@@ -12,18 +12,18 @@ from torch.autograd.function import once_differentiable
 
 import DCN3D
 
-class DeformConvFunction3d(Function):
+class DeformConv3dFunction(Function):
     @staticmethod
     def forward(ctx, input, offset, weight, bias,
                 stride, padding, dilation, group, deformable_groups, vol2col_step):
         ctx.stride = _triple(stride)
         ctx.padding = _triple(padding)
         ctx.dilation = _triple(dilation)
-        ctx.kernel_size = _triple(weight.shape[2:4])
+        ctx.kernel_size = _triple(weight.shape[2:5])
         ctx.group = group
         ctx.deformable_groups = deformable_groups
         ctx.vol2col_step = vol2col_step
-        output = DCN3D.deform_conv_forward(input, weight, bias,
+        output = DCN3D.deform_conv3d_forward(input, weight, bias,
                                          offset,
                                          ctx.kernel_size[0], ctx.kernel_size[1], ctx.kernel_size[2],
                                          ctx.stride[0], ctx.stride[1], ctx.stride[2],
@@ -40,7 +40,7 @@ class DeformConvFunction3d(Function):
     def backward(ctx, grad_output):
         input, offset, weight, bias = ctx.saved_tensors
         grad_input, grad_offset, grad_weight, grad_bias = \
-            DCN3D.deform_conv_backward(input, weight,
+            DCN3D.deform_conv3d_backward(input, weight,
                                      bias,
                                      offset,
                                      grad_output,
