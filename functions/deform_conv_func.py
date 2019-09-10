@@ -12,7 +12,7 @@ from torch.autograd.function import once_differentiable
 
 import DCN3D
 
-class DeformConvFunction(Function):
+class DeformConvFunction3d(Function):
     @staticmethod
     def forward(ctx, input, offset, weight, bias,
                 stride, padding, dilation, group, deformable_groups, vol2col_step):

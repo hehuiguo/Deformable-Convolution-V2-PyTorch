@@ -9,13 +9,13 @@ from torch import nn
 from torch.nn import init
 from torch.nn.modules.utils import _triple
 
-from functions.deform_conv_func import DeformConvFunction
+from functions.deform_conv_func import DeformConvFunction3d
 
-class DeformConv(nn.Module):
+class DeformConv3d(nn.Module):
 
     def __init__(self, in_channels, out_channels,
                  kernel_size, stride, padding, dilation=1, groups=1, deformable_groups=1, vol2col_step=64, bias=True):
-        super(DeformConv, self).__init__()
+        super(DeformConv3d, self).__init__()
 
         if in_channels % groups != 0:
             raise ValueError('in_channels {} must be divisible by groups {}'.format(in_channels, groups))
@@ -51,7 +51,7 @@ class DeformConv(nn.Module):
     def forward(self, input, offset):
         assert 2 * self.deformable_groups * self.kernel_size[0] * self.kernel_size[1] == \
             offset.shape[1]
-        return DeformConvFunction.apply(input, offset,
+        return DeformConvFunction3d.apply(input, offset,
                                                    self.weight,
                                                    self.bias,
                                                    self.stride,
