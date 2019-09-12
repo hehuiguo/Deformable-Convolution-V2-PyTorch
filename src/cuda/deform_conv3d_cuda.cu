@@ -89,7 +89,7 @@ deform_conv3d_cuda_forward(const at::Tensor &input,
     // define alias for easy use
     const int batch_n = vol2col_step_;
     const int per_input_size = channels * time_l * height * width;
-    const int per_offset_size = offset.size(1) * offset.size(2) * offset.size(3) * offset.size(4);//TODO：这里不确定啊
+    const int per_offset_size = offset.size(1) * offset.size(2) * offset.size(3)  * offset.size(4);
     auto output_n = output.view({batch/vol2col_step_, batch_n * time_out * height_out * width_out, channels_out});
     for (int n = 0; n < batch/vol2col_step_; ++n)
     {
@@ -120,8 +120,7 @@ deform_conv3d_cuda_forward(const at::Tensor &input,
 
     }
 
-    output = output.view({batch, time_out, height_out, width_out, channels_out}).permute({0, 4, 1, 2, 3}).contiguous(); //TODO:permute
-
+    output = output.view({batch, time_out, height_out, width_out, channels_out}).permute({0, 4, 1, 2, 3}).contiguous();
     return output;
 }
 
@@ -186,7 +185,7 @@ std::vector<at::Tensor> deform_conv3d_cuda_backward(const at::Tensor &input,
     AT_ASSERTM(channels == (channels_kernel * group),
                "Input shape and kernel channels wont match: (%d vs %d).", channels, channels_kernel * group);
 
-    const int time_out = (time_l + 2 * pad_t - (dilation_t * (kernel_t - 1) + 1)) / stride_t + 1;
+    const int time_out = (time_l + 2 * pad_t - (dilation_t * (kernel_t - 1) + 1)) / stride_t + 1;//这里是2不是3，因为这是计算输出的feature map的大小
     const int height_out = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
     const int width_out = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
 
@@ -215,7 +214,7 @@ std::vector<at::Tensor> deform_conv3d_cuda_backward(const at::Tensor &input,
 
     const int batch_n = vol2col_step_;
     const int per_input_size = channels * time_l * height * width;
-    const int per_offset_size = offset.size(1) * offset.size(2) * offset.size(3) * offset.size(4);//TODO:不太确定要不要成size4
+    const int per_offset_size = offset.size(1) * offset.size(2) * offset.size(3) * offset.size(4);
     auto grad_output_n = grad_output.view({batch/vol2col_step_, batch_n, channels_out, time_out, height_out, width_out});
     for (int n = 0; n < batch/vol2col_step_; ++n)
     {
@@ -225,7 +224,7 @@ std::vector<at::Tensor> deform_conv3d_cuda_backward(const at::Tensor &input,
         auto columns_g = columns.view({group, channels/group * kernel_t * kernel_h * kernel_w, batch_n * time_out * height_out * width_out});
         for (int g = 0; g < group; ++g)
         {
-            auto grad_output_gm = grad_output_g.select(1, g).permute({1, 0, 2, 3, 4}).contiguous().view({channels_out/group, batch_n * time_out * height_out * width_out});//TODO:permute
+            auto grad_output_gm = grad_output_g.select(1, g).permute({1, 0, 2, 3, 4}).contiguous().view({channels_out/group, batch_n * time_out * height_out * width_out});
             auto weight_gm = weight_g.select(0, g).view({channels_out/group, channels_kernel * kernel_t * kernel_h * kernel_w}).t();
             columns_g.select(0, g) = at::mm(weight_gm, grad_output_gm); //columns_g.select(0, g) = weight_gm * grad_output_gm
         }
@@ -241,7 +240,7 @@ std::vector<at::Tensor> deform_conv3d_cuda_backward(const at::Tensor &input,
                                                    pad_t, pad_h, pad_w, stride_t, stride_h, stride_w,
                                                    dilation_t, dilation_h, dilation_w, deformable_group,
                                                    grad_offset.data<scalar_t>() + n * vol2col_step_ * per_offset_size);
-            // gradient w.r.t. input data
+            //gradient w.r.t. input data
             deformable_col2vol_cuda(at::cuda::getCurrentCUDAStream(),
                                              columns.data<scalar_t>(),
                                              offset.data<scalar_t>() + n * vol2col_step_ * per_offset_size,
@@ -272,7 +271,7 @@ std::vector<at::Tensor> deform_conv3d_cuda_backward(const at::Tensor &input,
         //解读：累加weight和bias的梯度
         for (int g = 0; g < group; ++g)
         {
-            auto grad_output_gm = grad_output_g.select(1, g).permute({1, 0, 2, 3, 4}).contiguous().view({channels_out/group, batch_n * time_out * height_out * width_out});//TODO:permute
+            auto grad_output_gm = grad_output_g.select(1, g).permute({1, 0, 2, 3, 4}).contiguous().view({channels_out/group, batch_n * time_out * height_out * width_out});
             auto columns_gm = columns_g.select(0, g).t();
             auto grad_weight_gm = grad_weight_g.select(0, g).view({channels_out/group, channels_kernel * kernel_t * kernel_h * kernel_w});
             auto grad_bias_gm = grad_bias_g.select(0, g);

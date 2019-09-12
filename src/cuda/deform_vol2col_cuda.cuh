@@ -52,16 +52,16 @@ __device__ scalar_t dmcn_vol2col_bilinear(const scalar_t *bottom_data, const int
     v4 = bottom_data[((t_low * data_height) + h_high) * data_width + w_high];
   scalar_t v5 = 0;
   if (h_low >= 0 && w_low >= 0 && t_high <= time_l - 1)
-    v1 = bottom_data[((t_high * data_height) + h_low) * data_width + w_low];
+    v5 = bottom_data[((t_high * data_height) + h_low) * data_width + w_low];
   scalar_t v6 = 0;
   if (h_low >= 0 && w_high <= width - 1 && t_high <= time_l - 1)
-    v2 = bottom_data[((t_high * data_height) + h_low) * data_width + w_high];
+    v6 = bottom_data[((t_high * data_height) + h_low) * data_width + w_high];
   scalar_t v7 = 0;
   if (h_high <= height - 1 && w_low >= 0 && t_high <= time_l - 1)
-    v3 = bottom_data[((t_high * data_height) + h_high) * data_width + w_low];
+    v7 = bottom_data[((t_high * data_height) + h_high) * data_width + w_low];
   scalar_t v8 = 0;
   if (h_high <= height - 1 && w_high <= width - 1 && t_high <= time_l - 1)
-    v4 = bottom_data[((t_high * data_height) + h_high) * data_width + w_high];
+    v8 = bottom_data[((t_high * data_height) + h_high) * data_width + w_high];
 
   scalar_t w1 = hh * hw * ht, w2 = hh * lw * ht, w3 = lh * hw * ht, w4 = lh * lw * ht;
   scalar_t w5 = hh * hw * lt, w6 = hh * lw * lt, w7 = lh * hw * lt, w8 = lh * lw * lt;
@@ -112,7 +112,7 @@ __device__ scalar_t dmcn_get_coordinate_weight(scalar_t argmax_t, scalar_t argma
                                             const int time_l, const int height, const int width, const scalar_t *im_data,
                                             const int data_height, const int data_width, const int bp_dir)
 {
-  if (argmax_h <= -1 || argmax_h >= height || argmax_w <= -1 || argmax_w >= width)
+  if (argmax_h <= -1 || argmax_h >= height || argmax_w <= -1 || argmax_w >= width || argmax_t <= -1 || argmax_t >= time_l)
   {
     //empty
     return 0;
@@ -135,64 +135,64 @@ __device__ scalar_t dmcn_get_coordinate_weight(scalar_t argmax_t, scalar_t argma
   scalar_t weight = 0;
 
   // 三线性插值的求导计算
-  if (bp_dir == 0) //解读：计算t的offset
+  if (bp_dir == 0) //解读：计算t的offset的梯度
   {
     if (argmax_h_low >= 0 && argmax_w_low >= 0 && argmax_t_low >= 0) //imdata[t_low, h_low, w_low]
       weight += -1 * hh * hw * im_data[(argmax_t_low * data_height + argmax_h_low) * data_width + argmax_w_low];
-    if (argmax_h_low >= 0 && argmax_w_high < width && argmax_t_low >= 0)//imdata[t_low, h_low, w_high]
+    if (argmax_h_low >= 0 && argmax_w_high <= width - 1 && argmax_t_low >= 0)//imdata[t_low, h_low, w_high]
       weight += -1 * hh * lw* im_data[(argmax_t_low * data_height + argmax_h_low) * data_width + argmax_w_high];
-    if (argmax_h_high < height && argmax_w_low >= 0 && argmax_t_low >= 0)//imdata[t_low, h_high, w_low]
+    if (argmax_h_high <= height - 1 && argmax_w_low >= 0 && argmax_t_low >= 0)//imdata[t_low, h_high, w_low]
       weight += -1 * lh * hw * im_data[(argmax_t_low * data_height + argmax_h_high) * data_width + argmax_w_low];
-    if (argmax_h_high < height && argmax_w_high < width && argmax_t_low >= 0)//imdata[t_low, h_high, w_high]
+    if (argmax_h_high <= height - 1 && argmax_w_high <= width - 1 && argmax_t_low >= 0)//imdata[t_low, h_high, w_high]
       weight += -1 *lh * lw * im_data[(argmax_t_low * data_height + argmax_h_high) * data_width + argmax_w_high];
     
-    if (argmax_h_low >= 0 && argmax_w_low >= 0 && argmax_t_high < time_l) //imdata[t_high, h_low, w_low]
+    if (argmax_h_low >= 0 && argmax_w_low >= 0 && argmax_t_high <= time_l - 1) //imdata[t_high, h_low, w_low]
       weight += hh * hw * im_data[(argmax_t_high * data_height + argmax_h_low) * data_width + argmax_w_low];
-    if (argmax_h_low >= 0 && argmax_w_high < width && argmax_t_high < time_l)//imdata[t_high, h_low, w_high]
+    if (argmax_h_low >= 0 && argmax_w_high <= width - 1 && argmax_t_high <= time_l - 1)//imdata[t_high, h_low, w_high]
       weight += hh * lw* im_data[(argmax_t_high * data_height + argmax_h_low) * data_width + argmax_w_high];
-    if (argmax_h_high < height && argmax_w_low >= 0 && argmax_t_high < time_l)//imdata[t_high, h_high, w_low]
+    if (argmax_h_high <=  height - 1 && argmax_w_low >= 0 && argmax_t_high <= time_l - 1)//imdata[t_high, h_high, w_low]
       weight += lh * hw * im_data[(argmax_t_high * data_height + argmax_h_high) * data_width + argmax_w_low];
-    if (argmax_h_high < height && argmax_w_high < width && argmax_t_high < time_l)//imdata[t_high, h_high, w_high]
+    if (argmax_h_high <= height - 1 && argmax_w_high <= width - 1 && argmax_t_high <= time_l - 1)//imdata[t_high, h_high, w_high]
       weight += lh * lw * im_data[(argmax_t_high * data_height + argmax_h_high) * data_width + argmax_w_high];
   }
-  else if (bp_dir == 1) //解读：计算h的offset
+  else if (bp_dir == 1) //解读：计算h的offset的梯度
   {
     if (argmax_h_low >= 0 && argmax_w_low >= 0 && argmax_t_low >= 0) //imdata[t_low, h_low, w_low]
       weight += -1 * ht * hw * im_data[(argmax_t_low * data_height + argmax_h_low) * data_width + argmax_w_low];
-    if (argmax_h_low >= 0 && argmax_w_high < width && argmax_t_low >= 0)//imdata[t_low, h_low, w_high]
+    if (argmax_h_low >= 0 && argmax_w_high <= width - 1 && argmax_t_low >= 0)//imdata[t_low, h_low, w_high]
       weight += -1 * ht * lw * im_data[(argmax_t_low * data_height + argmax_h_low) * data_width + argmax_w_high];
-    if (argmax_h_high < height && argmax_w_low >= 0 && argmax_t_low >= 0)//imdata[t_low, h_high, w_low]
+    if (argmax_h_high <= height - 1 && argmax_w_low >= 0 && argmax_t_low >= 0)//imdata[t_low, h_high, w_low]
       weight += ht * hw * im_data[(argmax_t_low * data_height + argmax_h_high) * data_width + argmax_w_low];
-    if (argmax_h_high < height && argmax_w_high < width && argmax_t_low >= 0)//imdata[t_low, h_high, w_high]
+    if (argmax_h_high <= height - 1 && argmax_w_high <= width - 1 && argmax_t_low >= 0)//imdata[t_low, h_high, w_high]
       weight += ht * lw * im_data[(argmax_t_low * data_height + argmax_h_high) * data_width + argmax_w_high];
     
-    if (argmax_h_low >= 0 && argmax_w_low >= 0 && argmax_t_high < time_l) //imdata[t_high, h_low, w_low]
+    if (argmax_h_low >= 0 && argmax_w_low >= 0 && argmax_t_high <= time_l - 1) //imdata[t_high, h_low, w_low]
       weight += -1 * lt * hw * im_data[(argmax_t_high * data_height + argmax_h_low) * data_width + argmax_w_low];
-    if (argmax_h_low >= 0 && argmax_w_high < width && argmax_t_high < time_l)//imdata[t_high, h_low, w_high]
+    if (argmax_h_low >= 0 && argmax_w_high <= width - 1 && argmax_t_high <= time_l - 1)//imdata[t_high, h_low, w_high]
       weight += -1 * lt * lw * im_data[(argmax_t_high * data_height + argmax_h_low) * data_width + argmax_w_high];
-    if (argmax_h_high < height && argmax_w_low >= 0 && argmax_t_high < time_l)//imdata[t_high, h_high, w_low]
+    if (argmax_h_high <= height - 1 && argmax_w_low >= 0 && argmax_t_high <= time_l - 1)//imdata[t_high, h_high, w_low]
       weight += lt * hw * im_data[(argmax_t_high * data_height + argmax_h_high) * data_width + argmax_w_low];
-    if (argmax_h_high < height && argmax_w_high < width && argmax_t_high < time_l)//imdata[t_high, h_high, w_high]
+    if (argmax_h_high <= height - 1 && argmax_w_high <= width - 1 && argmax_t_high <=  time_l - 1)//imdata[t_high, h_high, w_high]
       weight += lt * lw * im_data[(argmax_t_high * data_height + argmax_h_high) * data_width + argmax_w_high];
   }
-  else if (bp_dir == 2) //解读：计算w的offset
+  else if (bp_dir == 2) //解读：计算w的offset的梯度
   {
     if (argmax_h_low >= 0 && argmax_w_low >= 0 && argmax_t_low >= 0) //imdata[t_low, h_low, w_low]
       weight += -1 * ht * hh * im_data[(argmax_t_low * data_height + argmax_h_low) * data_width + argmax_w_low];
-    if (argmax_h_low >= 0 && argmax_w_high < width && argmax_t_low >= 0)//imdata[t_low, h_low, w_high]
+    if (argmax_h_low >= 0 && argmax_w_high <= width - 1 && argmax_t_low >= 0)//imdata[t_low, h_low, w_high]
       weight += ht * hh* im_data[(argmax_t_low * data_height + argmax_h_low) * data_width + argmax_w_high];
-    if (argmax_h_high < height && argmax_w_low >= 0 && argmax_t_low >= 0)//imdata[t_low, h_high, w_low]
+    if (argmax_h_high <= height - 1 && argmax_w_low >= 0 && argmax_t_low >= 0)//imdata[t_low, h_high, w_low]
       weight += -1 * ht * lh * im_data[(argmax_t_low * data_height + argmax_h_high) * data_width + argmax_w_low];
-    if (argmax_h_high < height && argmax_w_high < width && argmax_t_low >= 0)//imdata[t_low, h_high, w_high]
+    if (argmax_h_high <= height - 1 && argmax_w_high <= width - 1 && argmax_t_low >= 0)//imdata[t_low, h_high, w_high]
       weight += ht * lh * im_data[(argmax_t_low * data_height + argmax_h_high) * data_width + argmax_w_high];
     
-    if (argmax_h_low >= 0 && argmax_w_low >= 0 && argmax_t_high < time_l) //imdata[t_high, h_low, w_low]
+    if (argmax_h_low >= 0 && argmax_w_low >= 0 && argmax_t_high <= time_l - 1) //imdata[t_high, h_low, w_low]
       weight += -1 * lt * hh * im_data[(argmax_t_high * data_height + argmax_h_low) * data_width + argmax_w_low];
-    if (argmax_h_low >= 0 && argmax_w_high < width && argmax_t_high < time_l)//imdata[t_high, h_low, w_high]
+    if (argmax_h_low >= 0 && argmax_w_high <= width - 1 && argmax_t_high <= time_l - 1)//imdata[t_high, h_low, w_high]
       weight += lt * hh * im_data[(argmax_t_high * data_height + argmax_h_low) * data_width + argmax_w_high];
-    if (argmax_h_high < height && argmax_w_low >= 0 && argmax_t_high < time_l)//imdata[t_high, h_high, w_low]
+    if (argmax_h_high <= height - 1 && argmax_w_low >= 0 && argmax_t_high <= time_l - 1)//imdata[t_high, h_high, w_low]
       weight += -1 * lt * lh * im_data[(argmax_t_high * data_height + argmax_h_high) * data_width + argmax_w_low];
-    if (argmax_h_high < height && argmax_w_high < width && argmax_t_high < time_l)//imdata[t_high, h_high, w_high]
+    if (argmax_h_high <= height - 1 && argmax_w_high <= width - 1 && argmax_t_high <= time_l - 1)//imdata[t_high, h_high, w_high]
       weight += lt * lh * im_data[(argmax_t_high * data_height + argmax_h_high) * data_width + argmax_w_high];
   }
   
@@ -325,8 +325,7 @@ __global__ void deformable_col2vol_gpu_kernel(const int n,
     const int cur_t = (int)cur_inv_t_data;
     const int cur_h = (int)cur_inv_h_data;
     const int cur_w = (int)cur_inv_w_data;
-    //TODO:????
-    for (int dz = -2; dz <= 2; dz++)
+    for (int dz = -2; dz <= 2; dz++)//解读：在（cur_inv_t_data，cur_inv_h_data，cur_inv_w_data）周围寻找,参与线性插值的点，更新梯度（为啥选2？理论上应该是全map的点
     {
       for (int dy = -2; dy <= 2; dy++)
       {
@@ -384,7 +383,7 @@ __global__ void deformable_col2vol_coord_gpu_kernel(const int n,
 
     for (int col_c = (offset_c / 3); col_c < channel_per_deformable_group; col_c += col_step)
     {
-      const int col_pos = ((((col_c * batch_size + b) * time_col) + t * height_col) + h) * width_col + w;
+      const int col_pos = (((((col_c * batch_size + b) * time_col) + t) * height_col) + h) * width_col + w;
       const int bp_dir = offset_c % 3;//0：计算t的offset；1：计算h的offet；2：计算w的offset
 
       int j = (col_pos / width_col / height_col / batch_size) % kernel_w;
@@ -407,9 +406,9 @@ __global__ void deformable_col2vol_coord_gpu_kernel(const int n,
       scalar_t inv_t = t_in + k * dilation_t + offset_t;
       scalar_t inv_h = h_in + i * dilation_h + offset_h;
       scalar_t inv_w = w_in + j * dilation_w + offset_w;
-      if (inv_h <= -1 || inv_w <= -1 || inv_h >= height || inv_w >= width)
+      if (inv_h <= -1 || inv_w <= -1 || inv_h >= height || inv_w >= width || inv_t <= -1 ||inv_t >= time_l) 
       {
-        inv_h = inv_w = -2;//边界外？
+        inv_h = inv_w = inv_t = -2;//边界外？
       }
       const scalar_t weight = dmcn_get_coordinate_weight(
           inv_t, inv_h, inv_w,
@@ -491,7 +490,7 @@ void deformable_col2vol_coord_cuda(cudaStream_t stream,
         num_kernels, data_col, data_im, data_offset, channels, time_im, height_im, width_im,
         kernel_t, kernel_h, kernel_w, pad_t, pad_h, pad_w, stride_t, stride_h, stride_w,
         dilation_t, dilation_h, dilation_w, channel_per_deformable_group,
-        batch_size, 2 * kernel_t * kernel_h * kernel_w * deformable_group, deformable_group, time_col, height_col, width_col, 
+        batch_size, 3 * kernel_t * kernel_h * kernel_w * deformable_group, deformable_group, time_col, height_col, width_col, 
         grad_offset);
   cudaError_t err = cudaGetLastError();
   if (err != cudaSuccess)
